@@ -24,8 +24,8 @@ Rows with unacceptably missing values are saved permanently as < data >_miss.sas
 -	All input datasets exist in the same directory
 -	All standard specifications files needed for the input datasets exist in the same directory
 -	All standard specifications files are .xlsx files and follow the guidelines and naming conventions in the "Required Documentation Guide for BACPAC Modified SDTM Standard"
--	STRESC variable exists and has appropriate length from variables sheet, but is blank (or can be overwritten) for rows with non-missing STRESN. 
-  -	OR if domain does not include a STRESC/STRESN variable, the dataset will be output as-is (aids in successive running). 
+-	STRESC variable exists and has appropriate length from _variables_ sheet, but is blank (or can be overwritten) for rows with non-missing STRESN. 
+    -	OR if domain does not include a STRESC/STRESN variable, the dataset will be output as-is (aids in successive running). 
 
 ### **Required input**
 -	Location of input datasets
@@ -47,7 +47,7 @@ This program fills in STRESC values where STRESN is not missing. To do so, the T
         -	if &varname = "PSQI4" then &varc = "PT"||strip(put(int(&varn),8.))||"H"||strip(put(  mod(&varn*60,60),8.) )||"M"; 
   
     - Any number of IF statements can be added following the structure seen above. Only “PSQI4” and the definition of &varc need to be updated. The macro variables &varname, &varc, and &varn will resolve correctly at runtime to TESTCD, STRESC, and STRESN, respectively.
-    -	If the provided format is not ISO8601 and is not a SAS-defined format, be sure to make the user-defined format available to this program at runtime or include the format as IF-ELSE statements within the ISO8601 definition. 
+    -	If the provided format is not ISO8601 and is not a SAS-defined format, be sure to make the user-defined format available to this program at runtime or include the format as IF-ELSE statements within the ISO8601 macro definition. 
 3.	If no text-based format exists in the _codelist_ sheet in the specs and no numeric format exists on the _valuelevel_ sheet, STRESC is set to the exact value of STRESN. For instance, if STRESN = 12.3333 but no format exists, STRESC = 12.3333. If this direct STRESN=STRESC conversion is not the desired behavior, be sure to provide a format on the _valuelevel_ sheet or add the required rows to the _codelist_ sheet. 
 
 
@@ -75,11 +75,11 @@ This program uses the specifications files to determine "how close" the STRESC v
 -	3 = value is missing
 -	4 = larger problem exists with value 
   
-Only rows with at least one alert > 0 are output as < data >_chk.sas7bdat. If all rows have all alerts > 0, the output dataset will be empty. 
+Only rows with at least one alert > 0 are output as < data >_chk.sas7bdat. If all rows have all alerts = 0, the output dataset will be empty. 
 
 # Successive runs 
 If the user is only interested in one of these tasks, the programs can be run individually. To use all three programs, I recommend the following:
-1.	Existing datasets should contain all expected variables set to appropriate lengths as specified in a variables sheet in the specifications files, though STRESC will be blank if not missing STRESN. STRESC will be non missing for TESTCDs that do not record a STRESN value (as seen in the simulated SC dataset). 
+1.	Existing datasets should contain all expected variables set to appropriate lengths as specified in a _variables_ sheet in the specifications files, though STRESC will be blank if not missing STRESN. STRESC will be non missing for TESTCDs that do not record a STRESN value (as seen in the simulated SC dataset). 
 2.	Missing_Check.sas removes rows with unacceptably missing values, outputting the original dataset as two datasets: < data >_miss.sas7bdat and < data >_nomiss.sas7bdat.
 3.	STRESN_to_STRESC.sas fills in STRESC values where STRESN is not missing. As input, use all < data >_nomiss.sas7bdat files output from Missing_Check.sas. Output files will be named < data >_nomiss_upd.sas7bdat.
 4.	Codelist_check.sas then checks STRESC values and other character values to make sure the values match one of the options provided in the specification files. As input, use all < data >_nomiss_upd.sas7bdat files. Rows with incorrect values are output as < data >_nomiss_upd_chk.sas7bdat with newly added ALERT variables briefly explaining the discrepancy. 
